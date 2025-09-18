@@ -10,19 +10,30 @@ import { ArrowLeft, FileText, Clock, ChevronRight } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 
 const ModuleDetails = () => {
-  const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
-  const [module, setModule] = useState<ModuleWithChapters | null>(null);
+  const { courseId, moduleId } = useParams<{ courseId: string; moduleId?: string }>();
+  const [modules, setModules] = useState<ModuleWithChapters[]>([]);
+  const [selectedModule, setSelectedModule] = useState<ModuleWithChapters | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchModule = async () => {
-      if (!courseId || !moduleId) return;
-      
+    const fetchModules = async () => {
+      if (!courseId) return;
+
       try {
-        const response = await coursesApi.getModule(courseId, moduleId);
+        const response = await coursesApi.getCourseModules(courseId);
         if (response.status === 'success') {
-          setModule(response.body);
+          setModules(response.body);
+
+          // If moduleId is provided, find and set the selected module
+          if (moduleId) {
+            const module = response.body.find(m => m.module_id === moduleId);
+            if (module) {
+              setSelectedModule(module);
+            } else {
+              setError('Module not found');
+            }
+          }
         } else {
           setError(response.message || 'Failed to load module details');
         }
@@ -33,7 +44,7 @@ const ModuleDetails = () => {
       }
     };
 
-    fetchModule();
+    fetchModules();
   }, [courseId, moduleId]);
 
   const formatDate = (dateString: string) => {
@@ -67,12 +78,12 @@ const ModuleDetails = () => {
     );
   }
 
-  if (error || !module) {
+  if (error || !modules) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <Alert variant="destructive">
-            <AlertDescription>{error || 'Module not found'}</AlertDescription>
+            <AlertDescription>{error || 'Modules not found'}</AlertDescription>
           </Alert>
         </div>
       </Layout>
@@ -82,7 +93,7 @@ const ModuleDetails = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
+        {/* Updated Breadcrumb */}
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -91,128 +102,86 @@ const ModuleDetails = () => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
+            {courseId && (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={`/courses/${courseId}/modules`}>Modules</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            )}
+           
             <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={`/courses/${courseId}`}>Course</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Module {module.module_number}</BreadcrumbPage>
+              <BreadcrumbPage>
+                {moduleId ? (selectedModule ? selectedModule.module_title : 'Module') : ''}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Back Button */}
-        <Link 
-          to={`/courses/${courseId}`} 
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Course
-        </Link>
+        {/* Removed Back Buttons as per user request */}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2">
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Badge variant="secondary">
-                  Module {module.module_number}
-                </Badge>
-                <Badge variant="outline">
-                  <Clock className="h-3 w-3 mr-1" />
-                  Created {formatDate(module.created_at)}
-                </Badge>
-                <Badge variant="outline">
-                  {module.chapters.length} Chapter{module.chapters.length !== 1 ? 's' : ''}
-                </Badge>
-              </div>
-              
-              <h1 className="text-3xl font-bold text-foreground mb-4">{module.module_title}</h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {module.module_description}
-              </p>
-            </div>
-
-            {/* Module Info Card */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="text-lg">Module Overview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                  <div className="p-4 bg-primary-light rounded-lg">
-                    <div className="text-2xl font-bold text-primary mb-1">
-                      {module.chapters.length}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Chapters</div>
-                  </div>
-                  <div className="p-4 bg-secondary rounded-lg">
-                    <div className="text-2xl font-bold text-foreground mb-1">
-                      {module.module_number}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Module Number</div>
-                  </div>
-                  <div className="p-4 bg-accent/10 rounded-lg">
-                    <div className="text-2xl font-bold text-accent mb-1">
-                      {formatDate(module.created_at).split(',')[0]}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Created</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar - Chapters */}
           <div>
-            <Card className="sticky top-24">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  Module Chapters
-                </CardTitle>
-                <CardDescription>
-                  {module.chapters.length} chapter{module.chapters.length !== 1 ? 's' : ''} available
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {module.chapters.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No chapters available yet
-                  </p>
+            {moduleId && selectedModule ? (
+              <>
+                <h1 className="text-3xl font-bold text-foreground mb-4">{selectedModule.module_title}</h1>
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Module Description</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{selectedModule.module_description}</p>
+                  </CardContent>
+                </Card>
+
+                {/* Chapters for selected module */}
+                <h2 className="text-2xl font-bold text-foreground mb-4">Chapters</h2>
+                {selectedModule.chapters && selectedModule.chapters.length > 0 ? (
+                  selectedModule.chapters.map((chapter) => (
+                    <Card key={chapter.chapter_id} className="mb-4">
+                      <CardHeader>
+                        <CardTitle className="text-lg">Chapter {chapter.chapter_number}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground">{chapter.chapter_content}</p>
+                      </CardContent>
+                    </Card>
+                  ))
                 ) : (
-                  module.chapters
-                    .sort((a, b) => a.chapter_number - b.chapter_number)
-                    .map((chapter) => (
+                  <p className="text-muted-foreground">No chapters available for this module.</p>
+                )}
+              </>
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold text-foreground mb-4">Course Modules</h1>
+                {modules.length === 0 ? (
+                  <p className="text-muted-foreground">No modules available for this course.</p>
+                ) : (
+                  <div className="grid gap-4">
+                    {modules.map((module) => (
                       <Link
-                        key={chapter.chapter_id}
-                        to={`/courses/${courseId}/modules/${moduleId}/chapters/${chapter.chapter_id}`}
+                        key={module.module_id}
+                        to={`/courses/${courseId}/modules/${module.module_id}`}
                         className="block"
                       >
-                        <Card className="hover:shadow-soft transition-all duration-200 hover:scale-[1.02] group cursor-pointer">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    Chapter {chapter.chapter_number}
-                                  </Badge>
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Click to view chapter content
-                                </div>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                            </div>
+                        <Card className="hover:shadow-soft transition-all duration-200 hover:scale-[1.02] cursor-pointer">
+                          <CardHeader>
+                            <CardTitle className="text-lg">{module.module_title}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-muted-foreground">{module.module_description}</p>
                           </CardContent>
                         </Card>
                       </Link>
-                    ))
+                    ))}
+                  </div>
                 )}
-              </CardContent>
-            </Card>
+              </>
+            )}
           </div>
         </div>
       </div>
