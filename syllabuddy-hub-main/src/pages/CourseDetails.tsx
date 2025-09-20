@@ -19,13 +19,21 @@ const CourseDetails = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       if (!courseId) return;
-      
+
       try {
-        const response = await coursesApi.getCourse(courseId);
-        if (response.status === 'success') {
-          setCourse(response.body);
+        const courseResponse = await coursesApi.getCourse(courseId);
+        if (courseResponse.status === 'success') {
+          setCourse(courseResponse.body);
         } else {
-          setError(response.message || 'Failed to load course details');
+          setError(courseResponse.message || 'Failed to load course details');
+          return;
+        }
+
+        const modulesResponse = await coursesApi.getCourseModules(courseId);
+        if (modulesResponse.status === 'success') {
+          //  setModules(modulesResponse.body);
+        } else {
+          setError(modulesResponse.message || 'Failed to load course modules');
         }
       } catch (err: any) {
         setError(err.response?.data?.message || 'Network error. Please try again.');
@@ -162,12 +170,9 @@ const CourseDetails = () => {
                   course.modules
                     .sort((a, b) => a.module_number - b.module_number)
                     .map((module) => (
-                      <Link
-                        key={module.module_id}
-                        to={`/courses/${courseId}/modules/${module.module_id}`}
-                        className="block"
-                      >
-                        <Card className="hover:shadow-soft transition-all duration-200 hover:scale-[1.02] group cursor-pointer">
+                      
+                        <Link to={`/courses/${courseId}/modules`}>
+                        <Card key={module.module_id} className="hover:shadow-soft transition-all duration-200 hover:scale-[1.02] group cursor-pointer">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">

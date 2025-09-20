@@ -17,6 +17,7 @@ const Courses = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -51,12 +52,6 @@ const Courses = () => {
       month: 'short',
       day: 'numeric',
     });
-  };
-
-  const getCourseImageUrl = (courseId: string) => {
-    const imageUrl = `${api.defaults.baseURL}/courses/${courseId}/image`;
-    console.log('Image URL:', imageUrl);
-    return imageUrl;
   };
 
   if (isLoading) {
@@ -174,7 +169,7 @@ const Courses = () => {
                         {course.course_image_url ? (
                           <div className="rounded-xl overflow-hidden bg-gradient-to-br from-primary/5 to-info/5 border border-border/30 shadow-soft group-hover:shadow-medium transition-all duration-500">
 <img
-                              src={getCourseImageUrl(course.course_id)}
+                              src={course.course_image_url}
                               alt={course.title}
                               className="w-full h-44 object-cover"
                               onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -214,7 +209,7 @@ const Courses = () => {
                         </div>
                         
                         {/* Enhanced button */}
-                        <Link to={`/courses/${course.course_id}`} className="block group/button">
+                        <Link to={`/courses/${course.course_id}/modules`} className="block group/button">
                           <Button className="w-full h-12 bg-gradient-to-r from-primary via-primary-dark to-primary hover:from-primary-dark hover:via-primary hover:to-primary-dark text-primary-foreground shadow-floating hover:shadow-magical transition-all duration-500 group-hover:scale-[1.02] group/button:hover:scale-[1.05] font-semibold text-base rounded-xl relative overflow-hidden">
                             {/* Button shimmer effect */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover/button:translate-x-[100%] transition-transform duration-700"></div>
@@ -224,6 +219,9 @@ const Courses = () => {
                             </span>
                           </Button>
                         </Link>
+
+                         {/* Modules display */}
+                        
                       </div>
                     </CardContent>
                   </Card>

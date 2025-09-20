@@ -45,21 +45,29 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/courses/:courseId" 
+            <Route
+              path="/courses/:courseId"
               element={
                 <ProtectedRoute>
                   <CourseDetails />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/courses/:courseId/modules/:moduleId" 
+            <Route
+              path="/courses/:courseId/modules"
               element={
                 <ProtectedRoute>
                   <ModuleDetails />
                 </ProtectedRoute>
-              } 
+              }
+            />
+            <Route
+              path="/courses/:courseId/modules/:moduleId"
+              element={
+                <ProtectedRoute>
+                  <ModuleDetails />
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/courses/:courseId/modules/:moduleId/chapters/:chapterId" 
