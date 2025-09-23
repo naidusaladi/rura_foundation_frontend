@@ -126,4 +126,9 @@ export const coursesApi = {
     const response = await api.get<ApiResponse<ModuleWithChapters[]>>(`/courses/${courseId}/modules`);
     return response.data;
   },
+
+  getModuleChapters: async (courseId: string, moduleId: string) => {
+    const response = await api.get<ApiResponse<Chapter[]>>(`/courses/${courseId}/modules/${moduleId}/chapters`);
+    return response.data;
+  },
 };
