@@ -73,7 +73,7 @@ const App = () => (
               path="/courses/:courseId/modules/:moduleId/chapters/:chapterId" 
               element={
                 <ProtectedRoute>
-                  <ChapterDetails />
+                  <ModuleDetails />
                 </ProtectedRoute>
               } 
             />
