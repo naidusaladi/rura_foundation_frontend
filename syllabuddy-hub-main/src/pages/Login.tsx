@@ -31,6 +31,7 @@ const Login = () => {
 
         if (userResponse.status === 'success') {
           console.log('getUserByEmail response:', userResponse);
+          console.log('User data being stored:', userResponse.body);
           login(token, userResponse.body);
           navigate('/courses');
         } else {

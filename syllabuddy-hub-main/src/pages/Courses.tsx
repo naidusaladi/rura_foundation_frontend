@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { coursesApi, Course, api, API_BASE_URL } from '@/lib/api';
-import { Search, Clock, BookOpen, ArrowRight } from 'lucide-react';
+import { Search, Clock, BookOpen, ArrowRight, Trash2, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 
 const Courses = () => {
@@ -16,6 +17,8 @@ const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
+  const { user } = useAuth();
 
 
   useEffect(() => {
@@ -52,6 +55,28 @@ const Courses = () => {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const handleDeleteCourse = async (courseId: string, courseTitle: string) => {
+    if (!confirm(`Are you sure you want to delete "${courseTitle}"? This action cannot be undone and will also delete all related modules and chapters.`)) {
+      return;
+    }
+
+    setDeletingCourseId(courseId);
+    try {
+      const response = await coursesApi.deleteCourse(courseId);
+      if (response.status === 'success') {
+        // Remove the deleted course from the state
+        setCourses(prev => prev.filter(course => course.course_id !== courseId));
+        setFilteredCourses(prev => prev.filter(course => course.course_id !== courseId));
+      } else {
+        setError(response.message || 'Failed to delete course');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Network error. Please try again.');
+    } finally {
+      setDeletingCourseId(null);
+    }
   };
 
   if (isLoading) {
@@ -151,6 +176,21 @@ const Courses = () => {
                           {formatDate(course.created_at)}
                         </Badge>
                         <div className="flex items-center gap-2">
+                          {user?.role === 'admin' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteCourse(course.course_id, course.title)}
+                              disabled={deletingCourseId === course.course_id}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              {deletingCourseId === course.course_id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
                           <div className="h-2 w-2 rounded-full bg-success animate-pulse shadow-success"></div>
                           <span className="text-xs text-success font-medium">Active</span>
                         </div>

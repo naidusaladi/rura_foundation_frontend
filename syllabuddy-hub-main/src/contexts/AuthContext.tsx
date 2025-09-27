@@ -6,6 +6,8 @@ interface AuthContextType {
   login: (token: string, userData: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  clearAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,21 +23,56 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const logout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user_data');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  const clearAuth = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    const userData = localStorage.getItem('user_data');
-    
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        logout();
+    const initializeAuth = () => {
+      const token = localStorage.getItem('access_token');
+      const userData = localStorage.getItem('user_data');
+      
+      console.log('Initializing auth - Token:', !!token, 'UserData:', !!userData);
+      
+      if (token && userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          console.log('Parsed user data:', parsedUser);
+          
+          // Check if the stored data is valid
+          if (parsedUser && parsedUser.email && parsedUser.user_name) {
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+          } else {
+            console.log('Invalid user data found, clearing auth');
+            logout();
+          }
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+          logout();
+        }
+      } else {
+        // Clear any partial auth state if either token or userData is missing
+        if (token || userData) {
+          console.log('Partial auth data found, clearing all');
+          logout();
+        }
       }
-    }
+      
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = (token: string, userData: User) => {
@@ -45,15 +82,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user_data');
-    setUser(null);
-    setIsAuthenticated(false);
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isLoading, clearAuth }}>
       {children}
     </AuthContext.Provider>
   );
