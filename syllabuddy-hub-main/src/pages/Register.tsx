@@ -15,7 +15,7 @@ const Register = () => {
     email: '',
     password: '',
     college: '',
-    role: '',
+    role: 'student',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -135,14 +135,13 @@ const Register = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
-                <Select onValueChange={(value) => handleInputChange('role', value)} disabled={isLoading}>
+                <Select onValueChange={(value) => handleInputChange('role', value)} disabled={isLoading} defaultValue="student">
                   <SelectTrigger>
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="student">Student</SelectItem>
                     <SelectItem value="instructor">Instructor</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

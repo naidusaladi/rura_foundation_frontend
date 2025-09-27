@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { GraduationCap, LogOut, User } from 'lucide-react';
+import { GraduationCap, LogOut, User, Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +36,14 @@ const Navbar = () => {
                 <Link to="/courses">
                   <Button variant="ghost">Courses</Button>
                 </Link>
+                {user?.role === 'admin' && (
+                  <Link to="/add-course">
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Course
+                    </Button>
+                  </Link>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="relative">
